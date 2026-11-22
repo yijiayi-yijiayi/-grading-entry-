@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0; url=javascript:void(0)">
+<title>333 模考阅卷工作台 · 入口</title>
+<style>
+  :root{--bg:#f4f6fb;--card:#fff;--ink:#1f2733;--muted:#687386;--line:#e3e8f0;--brand:#3b5bdb;--ok:#2f9e44;--warn:#e8590c}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#eef2ff,#f8fafc 55%,#e7f5f0);color:var(--ink);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .card{background:var(--card);border-radius:18px;box-shadow:0 16px 50px rgba(35,50,90,.12);width:100%;max-width:520px;padding:36px;text-align:center}
+  .ic{font-size:44px}
+  h1{font-size:22px;margin:12px 0 6px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 26px}
+  .status{font-size:13px;margin:18px 0 8px;color:var(--muted)}
+  .url-box{background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;color:var(--brand);margin-bottom:20px}
+  .btn{display:inline-block;background:var(--brand);color:#fff;border:0;border-radius:10px;padding:14px 30px;font-size:16px;font-weight:600;text-decoration:none;cursor:pointer;transition:.15s}
+  .btn:hover{background:#2f49b8}
+  .hint{font-size:12px;color:var(--muted);margin-top:20px;line-height:1.7}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
+  .dot.warn{background:var(--warn)}
+  .spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 16px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="ic">📝</div>
+  <h1>333 模考 · 阅卷工作台</h1>
+  <p class="sub">阅卷入口 · 本页网址永久不变</p>
+  <div id="loading"><div class="spin"></div><div class="status">正在获取最新工作台地址…</div></div>
+  <div id="ready" style="display:none">
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">工作台在线</span></div>
+    <div class="url-box" id="urlBox">—</div>
+    <a class="btn" id="enterBtn" href="#">进入阅卷工作台 →</a>
+    <div class="hint" id="hint"></div>
+  </div>
+  <div id="error" style="display:none;color:var(--warn)">
+    <p>暂时无法获取工作台地址，请稍后刷新本页。</p>
+  </div>
+</div>
+
+<script>
+// 这个页面部署在 GitHub Pages（固定网址）。它读取 url.json 得到当前
+// cloudflared 隧道地址，然后跳转到那里。url.json 由守护脚本在网址变化时自动更新并推送。
+const TARGET = 'url.json';
+async function main(){
+  try{
+    const res = await fetch(TARGET + '?t=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('http '+res.status);
+    const data = await res.json();
+    const url = (data.url||'').trim();
+    if(!url) throw new Error('empty url');
+    document.getElementById('loading').style.display='none';
+    document.getElementById('ready').style.display='block';
+    document.getElementById('urlBox').textContent = url;
+    document.getElementById('enterBtn').href = url;
+    const t = data.updated ? new Date(data.updated) : null;
+    const tstr = t && !isNaN(t) ? t.toLocaleString('zh-CN') : '';
+    document.getElementById('hint').innerHTML =
+      '这是阅卷老师的固定入口，收藏本页即可。<br>地址最后更新：' + (tstr||'未知') + '（约 1 分钟内自动同步）<br>打开后需输入访问口令。';
+    // 自动跳转（给 3 秒让用户看清地址，可点按钮提前进入）
+    let n = 3;
+    const dot = document.getElementById('dot');
+    const txt = document.getElementById('statusText');
+    txt.textContent = '即将进入工作台（' + n + ' 秒）…';
+    const timer = setInterval(()=>{
+      n--;
+      if(n<=0){ clearInterval(timer); location.href = url; }
+      else txt.textContent = '即将进入工作台（' + n + ' 秒）…';
+    }, 1000);
+    document.getElementById('enterBtn').onclick = ()=>{ clearInterval(timer); };
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error').style.display='block';
+  }
+}
+main();
+</script>
+</body>
+</html>
