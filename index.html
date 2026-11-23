@@ -47,7 +47,7 @@
 const TARGET = 'url.json';
 async function main(){
   try{
-    const res = await fetch(TARGET + '?t=' + Date.now(), {cache:'no-store'});
+    const res = await fetch(TARGET + '?t=' + Date.now() + Math.random(), {cache:'no-store', headers:{'Cache-Control':'no-cache'}});
     if(!res.ok) throw new Error('http '+res.status);
     const data = await res.json();
     const url = (data.url||'').trim();
@@ -59,7 +59,7 @@ async function main(){
     const t = data.updated ? new Date(data.updated) : null;
     const tstr = t && !isNaN(t) ? t.toLocaleString('zh-CN') : '';
     document.getElementById('hint').innerHTML =
-      '这是阅卷老师的固定入口，收藏本页即可。<br>地址最后更新：' + (tstr||'未知') + '（约 1 分钟内自动同步）<br>打开后需输入访问口令。';
+      '这是阅卷老师的固定入口，收藏本页即可。<br>地址最后更新：' + (tstr||'未知') + '（约 1 分钟内自动同步）<br>打开后需输入访问口令。<br><b style="color:#e8590c">如果进入后提示隧道失效，请回到本页刷新，会跳到最新地址——不要收藏带 trycloudflare.com 的链接。</b>';
     // 自动跳转（给 3 秒让用户看清地址，可点按钮提前进入）
     let n = 3;
     const dot = document.getElementById('dot');
